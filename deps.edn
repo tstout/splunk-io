@@ -1,6 +1,7 @@
 {:paths ["resources" "src"]
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        com.splunk/splunk {:mvn/version "1.6.5.0"}}
+        com.splunk/splunk {:mvn/version "1.6.5.0"}
+        org.clojure/data.json {:mvn/version "0.2.6"}}
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              "clojars" {:url "https://repo.clojars.org/"}
              "splunk" {:url "http://splunk.jfrog.io/splunk/ext-releases-local"}}
