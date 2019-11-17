@@ -1,0 +1,16 @@
+{:paths     ["resources" "src"]
+ :deps      {org.clojure/clojure   {:mvn/version "1.10.1"}
+             com.splunk/splunk     {:mvn/version "1.6.5.0"}
+             org.clojure/data.json {:mvn/version "0.2.6"}}
+ :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
+             "clojars" {:url "https://repo.clojars.org/"}
+             "splunk"  {:url "http://splunk.jfrog.io/splunk/ext-releases-local"}}
+ :aliases
+            {:test {:extra-paths ["test"]
+                    :extra-deps  {org.clojure/test.check {:mvn/version "0.10.0"}}}
+             :runner
+                   {:extra-deps {com.cognitect/test-runner
+                                 {:git/url "https://github.com/cognitect-labs/test-runner"
+                                  :sha     "76568540e7f40268ad2b646110f237a60295fa3c"}}
+                    :main-opts  ["-m" "cognitect.test-runner"
+                                 "-d" "test"]}}}
