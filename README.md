@@ -1,14 +1,21 @@
 # splunk-io
 
-A Clojure library designed to ... well, that part is up to you.
+Provide convenient programmatic access to splunk logs.
 
 ## Usage
 
-FIXME
+```clojure
+(search! {:username "user" :password "pwd"})
+```
+#TODO
+Implement general filter options. This is currently only useful for my work environment.
+
+
+
 
 ## License
 
-Copyright © 2019 FIXME
+Copyright © 2019 Todd Stout
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
