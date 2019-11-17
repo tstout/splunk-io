@@ -30,15 +30,16 @@
     (.add "latest_time" (-> (LocalDateTime/now) str))
     (.add "output_mode" JobResultsArgs$OutputMode/JSON)))
 
-(defmulti msg-parse (fn [msg] (-> msg :sourcetype keyword)))
+(defmulti log-parse (fn [msg] (-> msg :sourcetype keyword)))
 
-(defmethod msg-parse :_json [msg]
+(defmethod log-parse :_json [msg]
   (->
     msg
     :_raw
     (json/read-str :key-fn keyword)))
 
-(defmethod msg-parse :default [msg]
+(defmethod log-parse :default [msg]
+  (prn "default parse")
   (-> msg :_raw))
 
 (defn filter-result [logs]
@@ -46,7 +47,7 @@
     (fn [log]
       (let [{:keys [sourcetype _raw source _time]} log]
         {:sourcetype sourcetype
-         :msg    (msg-parse log)
+         :msg    (log-parse log)
          :source source
          :time   _time}))
     logs))
@@ -64,9 +65,8 @@
                :results)]
     (filter-result logs)))
 
-
-; TODO - add source to param map
-
+;; TODO - add some filtering options. Targeted filtering options will make this
+;; library more useful.
 (defn search!
   "Performs a blocking one-shot search. The supplied opts map is expected to
   contain splunk credentials."
@@ -74,9 +74,8 @@
   (->
     (connect opts)
     ;;(.oneshotSearch "search index=lab | head 10" (search-args))
-    (.oneshotSearch "search source=*space-services* | head 200" (search-args))
+    (.oneshotSearch "search source=*design-center-avera* | head 200" (search-args))
     process-result))
-
 
 (comment
   (search! {:username "user" :password "pwd"})
