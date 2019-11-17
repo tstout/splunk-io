@@ -1,6 +1,7 @@
 (ns splunk-io
   (:import (com.splunk Service SSLSecurityProtocol Args ResultsReaderJson JobResultsArgs$OutputMode JobEventsArgs$OutputMode)
-           (java.util HashMap))
+           (java.util HashMap)
+           (java.time LocalDateTime))
   (:require [clojure.data.json :as json]))
 
 ;;
@@ -10,7 +11,7 @@
 ;;
 
 (defn connect
-  "Connect to splunk using the Java SDK.
+  "Connect to splunk.
   The option map should contain :username and :password and optionally, :host.
   Returns a splunk Service instance."
   [opts]
@@ -23,22 +24,48 @@
                         "scheme"   "https"}))))
 
 (defn search-args []
-  ;; Args oneshotSearchArgs = new Args();
-  ;;oneshotSearchArgs.put("earliest_time", "2012-06-19T12:00:00.000-07:00");
-  ;;oneshotSearchArgs.put("latest_time",   "2012-06-20T12:00:00.000-07:00");)
   (->
     (Args.)
-    (.add "earliest_time" "2019-10-11T12:00:00.000-07:00")
-    (.add "latest_time" "2019-11-19T12:00:00.000-07:00")
+    (.add "earliest_time" (-> (LocalDateTime/now) (.minusDays 1) str))
+    (.add "latest_time" (-> (LocalDateTime/now) str))
     (.add "output_mode" JobResultsArgs$OutputMode/JSON)))
 
-(defn process-result
-  "Given an input stream slurp the contents and convert it from json to EDN."
-  [is]
+(defmulti msg-parse (fn [msg] (-> msg :sourcetype keyword)))
+
+(defmethod msg-parse :_json [msg]
   (->
-    is
-    slurp
+    msg
+    :_raw
     (json/read-str :key-fn keyword)))
+
+(defmethod msg-parse :default [msg]
+  (-> msg :_raw))
+
+(defn filter-result [logs]
+  (map
+    (fn [log]
+      (let [{:keys [sourcetype _raw source _time]} log]
+        {:sourcetype sourcetype
+         :msg    (msg-parse log)
+         :source source
+         :time   _time}))
+    logs))
+
+(defn filter-result-dbg [logs]
+  logs)
+
+(defn process-result
+  "Given an input stream read the contents and convert it from json to EDN."
+  [is]
+  (let [logs (->
+               is
+               slurp
+               (json/read-str :key-fn keyword)
+               :results)]
+    (filter-result logs)))
+
+
+; TODO - add source to param map
 
 (defn search!
   "Performs a blocking one-shot search. The supplied opts map is expected to
@@ -47,10 +74,17 @@
   (->
     (connect opts)
     ;;(.oneshotSearch "search index=lab | head 10" (search-args))
-    (.oneshotSearch "search source=*space-design-services*| head 10" (search-args))
+    (.oneshotSearch "search source=*space-services* | head 200" (search-args))
     process-result))
 
 
+(comment
+  (search! {:username "user" :password "pwd"})
+
+  (filter
+  #(clojure.string/includes? (:msg %) "ERROR")
+  (search! {:username "btstout" :password "pwd"}))
 
 
+  )
 
